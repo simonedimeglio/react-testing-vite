@@ -1,7 +1,4 @@
-// src/components/Contatore.test.jsx
-
-// Importiamo React e alcune utility di testing da @testing-library/react
-import React from "react";
+// Importiamo alcune utility di testing da @testing-library/react
 import { render, screen, fireEvent } from "@testing-library/react";
 
 // Importiamo il componente Contatore che vogliamo testare
@@ -31,6 +28,8 @@ test("incrementa il valore del contatore quando viene premuto il pulsante di inc
   fireEvent.click(pulsanteIncrementa);
 
   // Cerchiamo un elemento nel documento che contiene il testo "Valore del contatore: 1"
+  // La sintassi con /.../ è una espressione regolare in JavaScript
+  // NB: il /i indica CASE INSENSITIVE
   const contatoreElemento = screen.getByText(/valore del contatore: 1/i);
 
   // Verifichiamo che l'elemento sia presente nel documento

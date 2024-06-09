@@ -1,3 +1,5 @@
+# Il Testing in React
+
 **Guida all'Installazione e Introduzione ai Test in React**
 
 Il testing è una parte cruciale dello sviluppo software. Aiuta a garantire che il nostro codice funzioni come previsto e a prevenire bug prima che raggiungano gli utenti finali.
@@ -15,67 +17,7 @@ In questa guida, ci concentreremo sui test in React usando *React Testing Librar
 - **React Testing Library**: Una libreria per testare i componenti React in un modo che rispecchi l'uso reale da parte degli utenti.
 - **Vitest**: Un test runner veloce e moderno, particolarmente adatto per progetti Vite.
 
-## Configurazione di React Testing Library
-
-### Usando create-react-app:
-
-Create React App include già Jest e React Testing Library, quindi non è necessario installarli separatamente. Puoi iniziare subito a scrivere i test.
-
-### Usando Vite:
-
-Dobbiamo installare React Testing Library. Procedi con i seguenti passaggi.
-
-1) **Installiamo Vitest, React Testing Library e jsdom**
-
-```
-npm install vitest @testing-library/react @testing-library/jest-dom jsdom
-```
-
-2) **Configuriamo Vitest**: Modifichiamo il file `vite.config.js` per includere la configurazione di Vitest.
-
-```
-// vite.config.js
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/setupTests.js',
-  },
-});
-```
-
-3) **Inseriamo un nuovo file di setup per i test**
-
-```
-// src/setupTests.js
-import "@testing-library/jest-dom";
-```
-
-4) **Aggiungiamo uno script nel `package.json` per eseguire i test**
-
-```
-{
-  "scripts": {
-    "test": "vitest"
-  }
-}
-```
-
-5) **Ora possiamo eseguire i test tramite il seguente comando:**
-
-```
-npm test
-```
-
-Dopo aver configurato il progetto, il prossimo passo sarà scrivere e eseguire i test. Inizieremo con un semplice esempio di componente React e il relativo test.
-
-Prima però, cerchiamo di conoscere (*almeno un minimo*) la sintassi che utilizzeremo per effettuare i test.
-
-### Sintassi RTL
+## Sintassi RTL
 
 La sintassi del test che andremo a realizzare fa parte del framework di testing React Testing Library (RTL).
 
@@ -95,113 +37,103 @@ Cerchiamo di approfondire le basi:
 
 6. **Espressioni regolari**: Le espressioni regolari (regex) sono utilizzate per definire pattern di ricerca all'interno del testo degli elementi dell'interfaccia utente. Ad esempio, `/valore del contatore: 0/i` è un'espressione regolare che corrisponde a qualsiasi testo che contiene "valore del contatore: 0", indipendentemente dalle maiuscole o minuscole.
 
+### Rendering dei Componenti
 
-Spoiler: Questi sono solo alcuni dei concetti principali presenti nella sintassi del test.
-
-## Esempio Pratico: Testiamo un Componente React Semplice
-
-Iniziamo con l'esempio più classico e "scolastico" possibile: il famosissimo contatore.
-
-Consideriamo un componente React che rappresenta il sopra-citato contatore. Questo componente mostra un numero e offre pulsanti per incrementare e decrementare il suo valore.
-
-1) **Iniziamo con la creazione del componente `Contatore.jsx` nella cartella `src/components`:
+Per testare un componente, è necessario prima renderizzarlo nel contenitore virtuale fornito da RTL. Questo viene fatto utilizzando la funzione `render`:
 
 ```
-// components/Contatore.jsx
-import { useState } from "react";
+import { render } from '@testing-library/react';
+import MioComponente from './MioComponente';
 
-export default function Contatore() {
-  const [contatore, setContatore] = useState(0);
-
-  function incrementa() {
-    setContatore(contatore + 1);
-  }
-
-  function decrementa() {
-    setContatore(contatore - 1);
-  }
-
-  return (
-    <div>
-      <h2>Valore del contatore: {contatore}</h2>
-      <button onClick={incrementa}>Incrementa</button>
-      <button onClick={decrementa}>Decrementa</button>
-    </div>
-  );
-}
-
+render(<MioComponente />);
 ```
 
-2) **Creiamo il file di testing relativo a questo componente, ovvero `Contatore.test.jsx`.**
+### Selezionare gli elementi dell'interfaccia utente
+
+Dopo aver reso il componente, possiamo selezionare gli elementi dell'interfaccia utente utilizzando l'oggetto `screen`. RTL fornisce diverse query per selezionare gli elementi in base al loro testo, ruolo, attributi, stato, ecc.
+
+Alcune delle query più comuni sono:
+
+- `getByText`: Seleziona un elemento in base al suo testo visibile.
+- `getByRole`: Seleziona un elemento in base al suo ruolo accessibile (ad es. "button", "heading", "link", ecc.).
+- `getByLabelText`: Seleziona un elemento form in base al testo dell'etichetta associata.
+- `getByPlaceholderText`: Seleziona un elemento form in base al testo del placeholder.
+- `getByAltText`: Seleziona un elemento immagine in base al testo alternativo.
+
+Esempio:
 
 ```
-// Importiamo alcune utility di testing da @testing-library/react
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen } from '@testing-library/react';
 
-// Importiamo il componente Contatore che vogliamo testare
-import Contatore from "./Contatore";
+const buttonElement = screen.getByText('Click me');
+const headingElement = screen.getByRole('heading', { level: 1 });
+```
 
-// Questo è un test che verifica se il contatore viene inizializzato correttamente con il valore 0
-test("rende il contatore con valore iniziale 0", () => {
-  // Renderizziamo il componente Contatore
-  render(<Contatore />);
+### Interagire con gli elementi
 
-  // Cerchiamo un elemento nel documento che contiene il testo "Valore del contatore: 0"
-  const contatoreElemento = screen.getByText(/valore del contatore: 0/i);
+Dopo aver selezionato gli elementi dell'interfaccia utente, è possibile interagire con essi utilizzando la funzione `fireEvent`.
 
-  // Verifichiamo che l'elemento sia presente nel documento
-  expect(contatoreElemento).toBeInTheDocument();
-});
+Questa funzione simula eventi come clic, inserimento di testo, cambiamenti di valore, ecc.
 
-// Questo test verifica se il contatore aumenta di uno quando viene premuto il pulsante "Incrementa"
-test("incrementa il valore del contatore quando viene premuto il pulsante di incremento", () => {
-  // Renderizziamo il componente Contatore
-  render(<Contatore />);
+```
+import { fireEvent } from '@testing-library/react';
 
-  // Cerchiamo il pulsante "Incrementa" nel documento
-  const pulsanteIncrementa = screen.getByText(/incrementa/i);
+const inputElement = screen.getByLabelText('Nome');
+fireEvent.change(inputElement, { target: { value: 'John Doe' } });
 
-  // Simuliamo un click sul pulsante "Incrementa"
-  fireEvent.click(pulsanteIncrementa);
+const buttonElement = screen.getByText('Invia');
+fireEvent.click(buttonElement);
+```
 
-  // Cerchiamo un elemento nel documento che contiene il testo "Valore del contatore: 1"
-  // La sintassi con /.../ è una espressione regolare in JavaScript
-  // NB: il /i indica CASE INSENSITIVE
-  const contatoreElemento = screen.getByText(/valore del contatore: 1/i);
+### Effettuare "asserzioni"
 
-  // Verifichiamo che l'elemento sia presente nel documento
-  expect(contatoreElemento).toBeInTheDocument();
-});
+Dopo aver interagito con il componente, è necessario verificare che il suo comportamento sia corretto.
 
-// Questo test verifica se il contatore diminuisce di uno quando viene premuto il pulsante "Decrementa"
-test("decrementa il valore del contatore quando viene premuto il pulsante di decremento", () => {
-  // Renderizziamo il componente Contatore
-  render(<Contatore />);
+Questo viene fatto utilizzando la funzione `expect` fornita da Jest.
 
-  // Cerchiamo il pulsante "Decrementa" nel documento
-  const pulsanteDecrementa = screen.getByText(/decrementa/i);
+```
+import { screen } from '@testing-library/react';
 
-  // Simuliamo un click sul pulsante "Decrementa"
-  fireEvent.click(pulsanteDecrementa);
+const messageElement = screen.getByText('Benvenuto, John Doe!');
+expect(messageElement).toBeInTheDocument();
+```
 
-  // Cerchiamo un elemento nel documento che contiene il testo "Valore del contatore: -1"
-  const contatoreElemento = screen.getByText(/valore del contatore: -1/i);
+### Mock delle chiamate API
 
-  // Verifichiamo che l'elemento sia presente nel documento
-  expect(contatoreElemento).toBeInTheDocument();
+Se il componente da testare effettua chiamate API, è possibile utilizzare la funzione `jest.mock` o `vi.mock` (in Vitest) per simulare le risposte dell'API.
+
+```
+// Esempio con vi.mock per progetti realizzati con Vite
+import { vi } from 'vitest';
+
+vi.mock('./api', () => ({
+  fetchData: () => Promise.resolve({ data: 'mock data' }),
+}));
+```
+
+### Test asincroni
+
+Se il componente da testare ha effetti collaterali asincroni (come le chiamate API), è necessario attendere che questi effetti vengano completati prima di effettuare le asserzioni. Questo può essere fatto utilizzando le utility `waitFor`, `findBy` o `await`.
+
+```
+import { screen, waitFor } from '@testing-library/react';
+
+await waitFor(() => {
+  const loadingElement = screen.queryByText('Loading...');
+  expect(loadingElement).not.toBeInTheDocument();
 });
 ```
 
-3) **Lanciamo in terminale il comando per iniziare i test, ovvero `npm test`. Il risultato sarà il seguente:**
+### Best practice: la pulizia dopo i test
+
+È buona norma pulire gli effetti collaterali dopo ogni test per evitare interferenze tra i diversi test. Questo può essere fatto utilizzando la funzione `cleanup` fornita da RTL.
 
 ```
-✓ src/components/Contatore.test.jsx (3)
-✓ rende il contatore con valore iniziale 0
-✓ incrementa il valore del contatore quando viene premuto il pulsante di incremento
-✓ decrementa il valore del contatore quando viene premuto il pulsante di decremento
+import { cleanup } from '@testing-library/react';
 
-Test Files  1 passed (1)
-Tests  3 passed (3)
-Start at  19:36:26
-Duration  135ms
+afterEach(cleanup);
 ```
+
+Ovviamente questa mia mini-guida copre i concetti chiave di React Testing Library.
+
+Per approfondimenti e casi d'uso più specifici, l'ovvio consiglio è quello di fare riferimento alla [documentazione ufficiale](https://testing-library.com/docs/react-testing-library/intro/) della libreria.
